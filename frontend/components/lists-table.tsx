@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Download, Eye, MoreHorizontal, Trash } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -18,46 +18,110 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ListDistributionDetails } from "@/components/list-distribution-details"
 
-// Mock data for lists
-const initialLists = [
-  {
-    id: "1",
-    name: "Marketing Leads Q2.csv",
-    uploadDate: "May 15, 2025",
-    totalLeads: 125,
-    status: "Distributed",
-  },
-  {
-    id: "2",
-    name: "Sales Leads Q2.csv",
-    uploadDate: "May 13, 2025",
-    totalLeads: 75,
-    status: "Distributed",
-  },
-  {
-    id: "3",
-    name: "Support Leads Q2.csv",
-    uploadDate: "May 10, 2025",
-    totalLeads: 50,
-    status: "Distributed",
-  },
-]
+// Define List type
+interface List {
+  id: string;
+  name: string;
+  uploadDate: string;
+  totalLeads: number;
+  status: string;
+}
+
 
 export function ListsTable() {
-  const [lists, setLists] = useState(initialLists)
-  const [selectedList, setSelectedList] = useState<(typeof initialLists)[0] | null>(null)
+  const [lists, setLists] = useState<List[]>([])
+  const [selectedList, setSelectedList] = useState<List | null>(null)
   const [showDistribution, setShowDistribution] = useState(false)
+  const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
-  const handleDeleteList = (id: string) => {
-    setLists(lists.filter((list) => list.id !== id))
-    toast({
-      title: "List deleted",
-      description: "The list has been deleted successfully",
-    })
+  // Fetch lists from backend
+  const fetchLists = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('token')
+      
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "You need to be logged in to view lists",
+          variant: "destructive"
+        })
+        return
+      }
+
+      const response = await fetch("http://localhost:5000/api/lists", {
+        method: "GET",
+        headers: { 
+          "Authorization": `Bearer ${token}`
+        },
+      })
+
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch lists')
+      }
+
+      setLists(data)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to fetch lists",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleViewDistribution = (list: (typeof initialLists)[0]) => {
+  // Delete list
+  const handleDeleteList = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token')
+      
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "You need to be logged in to delete lists",
+          variant: "destructive"
+        })
+        return
+      }
+
+      const response = await fetch(`http://localhost:5000/api/lists/${id}`, {
+        method: "DELETE",
+        headers: { 
+          "Authorization": `Bearer ${token}`
+        },
+      })
+
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to delete list')
+      }
+
+      setLists(lists.filter((list) => list.id !== id))
+      toast({
+        title: "List deleted",
+        description: "The list has been deleted successfully",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete list",
+        variant: "destructive"
+      })
+    }
+  }
+
+  // Fetch lists when component mounts
+  useEffect(() => {
+    fetchLists()
+  }, [])
+
+  const handleViewDistribution = (list: List) => {
     setSelectedList(list)
     setShowDistribution(true)
   }

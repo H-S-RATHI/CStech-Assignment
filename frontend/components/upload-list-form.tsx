@@ -59,16 +59,33 @@ export function UploadListForm() {
       })
     }, 300)
 
-    // In a real app, you would call your API here
-    // const formData = new FormData()
-    // formData.append('file', file)
-    // await fetch('/api/lists/upload', {
-    //   method: 'POST',
-    //   body: formData,
-    // })
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const response = await fetch('/api/lists/upload', {
+        method: 'POST',
+        body: formData,
+      })
 
-    // For demo purposes, we'll simulate a successful upload
-    await new Promise((resolve) => setTimeout(resolve, 3000))
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.detail || 'Upload failed')
+      }
+
+      toast({
+        title: "List uploaded successfully",
+        description: `The list has been uploaded successfully. ${data.data.num_records} records processed`,
+      })
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "An error occurred during upload",
+        variant: "destructive",
+      })
+      throw error
+    }
 
     clearInterval(interval)
     setUploadProgress(100)
