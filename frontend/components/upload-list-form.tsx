@@ -60,11 +60,26 @@ export function UploadListForm() {
     }, 300)
 
     try {
+      // Get the authentication token from localStorage
+      const token = localStorage.getItem('token')
+      
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "You need to be logged in to upload lists",
+          variant: "destructive"
+        })
+        return
+      }
+
       const formData = new FormData()
       formData.append('file', file)
       
-      const response = await fetch('/api/lists/upload', {
+      const response = await fetch('http://localhost:5000/api/lists/upload', {
         method: 'POST',
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
         body: formData,
       })
 
@@ -76,7 +91,7 @@ export function UploadListForm() {
 
       toast({
         title: "List uploaded successfully",
-        description: `The list has been uploaded successfully. ${data.data.num_records} records processed`,
+        description: `The list has been uploaded successfully. ${data.list.totalLeads} leads processed`,
       })
     } catch (error) {
       toast({
