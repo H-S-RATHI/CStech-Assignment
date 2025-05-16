@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react"
 import { Edit, MoreHorizontal, Trash, RefreshCw } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -24,7 +24,12 @@ interface Agent {
   leadsCount?: number;
 }
 
-export function AgentsList() {
+// Define the ref type
+export interface AgentsListRef {
+  fetchAgents: () => Promise<void>;
+}
+
+export const AgentsList = forwardRef<AgentsListRef>((props, ref) => {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -134,6 +139,11 @@ export function AgentsList() {
     }
   };
   
+  // Expose the fetchAgents method via ref
+  useImperativeHandle(ref, () => ({
+    fetchAgents
+  }));
+
   // Fetch agents when component mounts
   useEffect(() => {
     fetchAgents();
@@ -210,4 +220,4 @@ export function AgentsList() {
       </div>
     </div>
   )
-}
+});

@@ -1,8 +1,20 @@
+"use client"
+
+import { useState, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AgentsList } from "@/components/agents-list"
 import { AddAgentForm } from "@/components/add-agent-form"
 
 export default function AgentsPage() {
+  const agentsListRef = useRef<{ fetchAgents: () => Promise<void> } | null>(null);
+
+  const handleAgentAdded = () => {
+    // Refresh the agents list when a new agent is added
+    if (agentsListRef.current) {
+      agentsListRef.current.fetchAgents();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -10,7 +22,7 @@ export default function AgentsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
           <p className="text-muted-foreground">Manage your agents and their assignments.</p>
         </div>
-        <AddAgentForm />
+        <AddAgentForm onAgentAdded={handleAgentAdded} />
       </div>
 
       <Card>
@@ -19,7 +31,7 @@ export default function AgentsPage() {
           <CardDescription className="text-zinc-100">All registered agents in the system</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          <AgentsList />
+          <AgentsList ref={agentsListRef} />
         </CardContent>
       </Card>
     </div>
