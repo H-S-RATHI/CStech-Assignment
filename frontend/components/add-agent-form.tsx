@@ -27,8 +27,13 @@ const formSchema = z.object({
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 })
 
-export function AddAgentForm() {
+interface AddAgentFormProps {
+  onAgentAdded?: () => void;
+}
+
+export function AddAgentForm({ onAgentAdded }: AddAgentFormProps = {}) {
   const [open, setOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -42,23 +47,64 @@ export function AddAgentForm() {
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, you would call your API here
-    // await fetch("/api/agents", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify(values),
-    // })
-
-    // For demo purposes, we'll simulate a successful submission
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    toast({
-      title: "Agent added",
-      description: "The agent has been added successfully",
-    })
-
-    form.reset()
-    setOpen(false)
+    try {
+      setIsSubmitting(true);
+      console.log('Submitting agent form with values:', values);
+      
+      // Get the token from localStorage
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        console.error('No authentication token found');
+        toast({
+          title: "Authentication Error",
+          description: "You need to be logged in to add agents",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log('Making API call to add agent');
+      const response = await fetch("http://localhost:5000/api/agents", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(values),
+      });
+      
+      console.log('API response status:', response.status);
+      
+      const data = await response.json();
+      console.log('API response data:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to add agent');
+      }
+      
+      toast({
+        title: "Agent added",
+        description: "The agent has been added successfully",
+      });
+      
+      form.reset();
+      setOpen(false);
+      
+      // Call the callback function if provided
+      if (onAgentAdded) {
+        onAgentAdded();
+      }
+    } catch (error) {
+      console.error('Error adding agent:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to add agent",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -132,8 +178,9 @@ export function AddAgentForm() {
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
+                disabled={isSubmitting}
               >
-                Add Agent
+                {isSubmitting ? "Adding..." : "Add Agent"}
               </Button>
             </DialogFooter>
           </form>

@@ -35,32 +35,49 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
-      // In a real app, you would call your API here
-      // const response = await fetch("/api/login", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(values),
-      // })
+      console.log('Submitting login form with values:', values);
+      
+      const response = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      
+      console.log('Login API response status:', response.status);
+      
+      const data = await response.json();
+      console.log('Login API response data:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+      
+      // Store the token in localStorage
+      if (data.token) {
+        console.log('Storing token in localStorage');
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+      } else {
+        console.error('No token received from server');
+        throw new Error('No authentication token received');
+      }
 
-      // For demo purposes, we'll simulate a successful login
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Simulate successful login
       toast({
         title: "Login successful",
         description: "Welcome to the admin dashboard",
-      })
+      });
 
       // Redirect to dashboard
-      router.push("/dashboard")
+      router.push("/dashboard");
     } catch (error) {
+      console.error('Login error:', error);
       toast({
         title: "Login failed",
-        description: "Please check your credentials and try again",
+        description: error instanceof Error ? error.message : "Please check your credentials and try again",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
