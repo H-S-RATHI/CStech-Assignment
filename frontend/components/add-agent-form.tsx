@@ -110,7 +110,7 @@ export function AddAgentForm({ onAgentAdded }: AddAgentFormProps = {}) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700">
+        <Button className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-sky-600 hover:to-blue-700">
           <Plus className="mr-2 h-4 w-4" />
           Add Agent
         </Button>

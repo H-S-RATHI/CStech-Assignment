@@ -17,18 +17,16 @@ export default function AgentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
-          <p className="text-muted-foreground">Manage your agents and their assignments.</p>
-        </div>
-        <AddAgentForm onAgentAdded={handleAgentAdded} />
-      </div>
 
       <Card>
         <CardHeader className="bg-gradient-to-r from-violet-500 to-indigo-600 text-white rounded-t-lg">
-          <CardTitle>Agents List</CardTitle>
-          <CardDescription className="text-zinc-100">All registered agents in the system</CardDescription>
+          <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
+          <p className="text-zinc-100d">All registered agents in the system</p>
+        </div>
+        <AddAgentForm onAgentAdded={handleAgentAdded} />
+      </div>
         </CardHeader>
         <CardContent className="pt-6">
           <AgentsList ref={agentsListRef} />
