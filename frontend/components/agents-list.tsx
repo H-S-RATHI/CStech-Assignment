@@ -22,7 +22,6 @@ interface Agent {
   name: string;
   email: string;
   mobile: string;
-  leadsCount?: number;
 }
 
 // Define the ref type
@@ -81,13 +80,7 @@ export const AgentsList = forwardRef<AgentsListRef>((props, ref) => {
         throw new Error(data.message || 'Failed to fetch agents');
       }
       
-      // Add a default leadsCount property if it doesn't exist
-      const agentsWithLeadCount = data.map((agent: Agent) => ({
-        ...agent,
-        leadsCount: agent.leadsCount || 0
-      }));
       
-      setAgents(agentsWithLeadCount);
     } catch (error) {
       console.error('Error fetching agents:', error);
       toast({
@@ -182,7 +175,6 @@ export const AgentsList = forwardRef<AgentsListRef>((props, ref) => {
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Mobile</TableHead>
-              <TableHead>Assigned Leads</TableHead>
               <TableHead className="w-[80px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -201,7 +193,6 @@ export const AgentsList = forwardRef<AgentsListRef>((props, ref) => {
                 <TableCell className="font-medium">{agent.name}</TableCell>
                 <TableCell>{agent.email}</TableCell>
                 <TableCell>{agent.mobile}</TableCell>
-                <TableCell>{agent.leadsCount}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
