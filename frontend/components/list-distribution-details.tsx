@@ -87,16 +87,19 @@ export async function getDistributionData(listId: string): Promise<Agent[]> {
     
     console.log('Transformed agents:', agents);
     return agents;
-  } catch (error) {
-    console.error('Error fetching distribution data:', error);
+  } catch (err) {
+    console.error('Error fetching distribution data:', err);
     return [];
   }
 }
+
+import { ChevronDown, ChevronUp } from "lucide-react"
 
 export function ListDistributionDetails({ list }: { list: List }) {
   const [agents, setAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchDistribution = async () => {
@@ -117,57 +120,109 @@ export function ListDistributionDetails({ list }: { list: List }) {
   }, [list.id])
 
   if (loading) {
-    return <div>Loading distribution data...</div>
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-violet-500 border-t-transparent"></div>
+      </div>
+    )
   }
 
   if (error) {
-    return <div className="text-red-500">{error}</div>
+    return (
+      <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
+        <div className="text-red-700 font-medium">Error</div>
+        <p className="text-red-600 text-sm mt-2">{error}</p>
+      </div>
+    )
+  }
+
+  if (agents.length === 0) {
+    return (
+      <div className="p-6 bg-slate-50 border border-slate-200 rounded-lg">
+        <div className="text-slate-700 font-medium">No Distribution</div>
+        <p className="text-slate-600 text-sm mt-2">No leads have been distributed yet</p>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6 py-4">
-      <div className="grid grid-cols-5 gap-4">
-        {agents.map((agent: Agent) => (
-          <div
-            key={agent.id}
-            className="flex flex-col items-center justify-center p-4 rounded-lg bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-slate-800 dark:to-indigo-950"
-          >
-            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 flex items-center justify-center text-white font-medium">
-              {agent.id}
-            </div>
-            <h3 className="mt-2 font-medium text-center">{agent.name}</h3>
-            <p className="text-sm text-muted-foreground">{agent.leadsCount} leads</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="space-y-4">
-        <h3 className="font-medium">Leads Distribution</h3>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Agent</TableHead>
-                <TableHead>First Name</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Notes</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {agents.map((agent: Agent) =>
-                agent.leads.map((lead: { firstName: string; phone: string; notes: string }, leadIndex: number) => (
-                  <TableRow key={`${agent.id}-${leadIndex}`}>
-                    <TableCell>{agent.name}</TableCell>
-                    <TableCell>{lead.firstName}</TableCell>
-                    <TableCell>{lead.phone}</TableCell>
-                    <TableCell>{lead.notes}</TableCell>
-                  </TableRow>
-                )),
+    <div className="space-y-6">
+      <div className="flex flex-col space-y-4">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Agents Distribution</h2>
+        <div className="space-y-2">
+          {agents.map((agent) => (
+            <div
+              key={agent.id}
+              className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors ${
+                selectedAgent === agent.id
+                  ? 'bg-violet-50 dark:bg-violet-900/20 border-l-4 border-violet-500'
+                  : 'hover:bg-gray-50 dark:hover:bg-slate-700/50'
+              }`}
+              onClick={() => setSelectedAgent(selectedAgent === agent.id ? null : agent.id)}
+            >
+              <div className="flex items-center space-x-3">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 flex items-center justify-center text-white font-semibold">
+                  {agent.name.charAt(0)}
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">{agent.name}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{agent.leadsCount} Leads</p>
+                </div>
+              </div>
+              {selectedAgent === agent.id ? (
+                <ChevronUp className="h-5 w-5 text-violet-500" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-gray-400 dark:text-gray-500" />
               )}
-            </TableBody>
-          </Table>
+            </div>
+          ))}
         </div>
       </div>
+
+      {selectedAgent && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {agents.find(a => a.id === selectedAgent)?.name}'s Leads
+            </h3>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              {agents.find(a => a.id === selectedAgent)?.leadsCount} Leads
+            </div>
+          </div>
+          
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="overflow-y-auto max-h-[400px]">
+              <Table className="w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-gray-300 py-3">
+                      First Name
+                    </TableHead>
+                    <TableHead className="bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-gray-300 py-3">
+                      Phone
+                    </TableHead>
+                    <TableHead className="bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-gray-300 py-3">
+                      Notes
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {agents.find(a => a.id === selectedAgent)?.leads.map((lead, leadIndex) => (
+                    <TableRow
+                      key={leadIndex}
+                      className="hover:bg-gray-50 dark:hover:bg-slate-700/50"
+                    >
+                      <TableCell className="py-4">{lead.firstName}</TableCell>
+                      <TableCell className="py-4">{lead.phone}</TableCell>
+                      <TableCell className="py-4">{lead.notes}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
