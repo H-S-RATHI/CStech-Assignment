@@ -1,6 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useEffect, useState } from "react"
 
-type List = {
+interface List {
   id: string
   name: string
   uploadDate: string
@@ -8,15 +9,15 @@ type List = {
   status: string
 }
 
-type Agent = {
+interface Agent {
   id: string
   name: string
   leadsCount: number
-  leads: {
+  leads: Array<{
     firstName: string
     phone: string
     notes: string
-  }[]
+  }>
 }
 
 // Mock data for distribution
@@ -51,13 +52,82 @@ const generateMockDistribution = (list: List): Agent[] => {
   return agents
 }
 
+export async function getDistributionData(listId: string): Promise<Agent[]> {
+  try {
+    console.log('Fetching distribution for list:', listId);
+    const response = await fetch(`http://localhost:5000/api/lists/${listId}/distribution`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    
+    console.log('Response status:', response.status);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Response error:', errorText);
+      throw new Error(`Failed to fetch distribution data: ${errorText}`);
+    }
+    
+    const data = await response.json();
+    console.log('Received data:', data);
+    
+    // Transform the data to match our Agent interface
+    const agents = data.distribution.map((agent: { agent: { id: string; name: string; email: string }; leads: any[] }) => ({
+      id: agent.agent.id,
+      name: agent.agent.name,
+      leadsCount: agent.leads.length,
+      leads: agent.leads.map((lead: { firstName: string; phone: string; notes: string }) => ({
+        firstName: lead.firstName,
+        phone: lead.phone,
+        notes: lead.notes
+      }))
+    }));
+    
+    console.log('Transformed agents:', agents);
+    return agents;
+  } catch (error) {
+    console.error('Error fetching distribution data:', error);
+    return [];
+  }
+}
+
 export function ListDistributionDetails({ list }: { list: List }) {
-  const agents = generateMockDistribution(list)
+  const [agents, setAgents] = useState<Agent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchDistribution = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await getDistributionData(list.id)
+        setAgents(data)
+      } catch (err) {
+        setError('Failed to load distribution data')
+        console.error('Error:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDistribution()
+  }, [list.id])
+
+  if (loading) {
+    return <div>Loading distribution data...</div>
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>
+  }
 
   return (
     <div className="space-y-6 py-4">
       <div className="grid grid-cols-5 gap-4">
-        {agents.map((agent) => (
+        {agents.map((agent: Agent) => (
           <div
             key={agent.id}
             className="flex flex-col items-center justify-center p-4 rounded-lg bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-slate-800 dark:to-indigo-950"
@@ -72,7 +142,7 @@ export function ListDistributionDetails({ list }: { list: List }) {
       </div>
 
       <div className="space-y-4">
-        <h3 className="font-medium">Sample Leads Distribution</h3>
+        <h3 className="font-medium">Leads Distribution</h3>
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -84,8 +154,8 @@ export function ListDistributionDetails({ list }: { list: List }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {agents.map((agent) =>
-                agent.leads.slice(0, 2).map((lead, leadIndex) => (
+              {agents.map((agent: Agent) =>
+                agent.leads.map((lead: { firstName: string; phone: string; notes: string }, leadIndex: number) => (
                   <TableRow key={`${agent.id}-${leadIndex}`}>
                     <TableCell>{agent.name}</TableCell>
                     <TableCell>{lead.firstName}</TableCell>
@@ -97,9 +167,6 @@ export function ListDistributionDetails({ list }: { list: List }) {
             </TableBody>
           </Table>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Showing sample leads. Each agent has {agents[0]?.leadsCount} leads in total.
-        </p>
       </div>
     </div>
   )

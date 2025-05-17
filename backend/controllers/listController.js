@@ -101,6 +101,11 @@ const getListDistribution = async (req, res) => {
     // Group leads by agent
     const distribution = {};
     leads.forEach(lead => {
+      if (!lead.assignedTo) {
+        // Skip leads without an assigned agent
+        return;
+      }
+      
       const agentId = lead.assignedTo._id.toString();
       if (!distribution[agentId]) {
         distribution[agentId] = {
