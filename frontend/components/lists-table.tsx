@@ -212,30 +212,26 @@ export function ListsTable() {
                       <Badge className="bg-gradient-to-r from-green-500 to-emerald-500">{list.status}</Badge>
                     </TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleViewDistribution(list)}
+                            className="hover:bg-violet-50 dark:hover:bg-violet-900/20"
+                          >
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">View distribution for {list.name}</span>
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" key={list.id}>
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleViewDistribution(list)}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View Distribution
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Download className="mr-2 h-4 w-4" />
-                            Download
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={handleDelete}>
-                            <Trash className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleDelete}
+                            className="hover:bg-red-50 dark:hover:bg-red-900/20"
+                          >
+                            <Trash className="h-4 w-4" />
+                            <span className="sr-only">Delete list {list.name}</span>
+                          </Button>
+                        </div>
                     </TableCell>
                   </TableRow>
                 );
