@@ -54,7 +54,8 @@ const uploadList = async (req, res) => {
           for (let j = 0; j < agentLeadCount && leadIndex < leads.length; j++) {
             const lead = new Lead({
               ...leads[leadIndex],
-              assignedTo: agents[i]._id
+              assignedTo: agents[i]._id,
+              listId: list._id
             });
             await lead.save();
             leadIndex++;
@@ -143,11 +144,24 @@ const deleteList = async (req, res) => {
       return res.status(404).json({ message: 'List not found' });
     }
 
-    // Delete associated leads
-    await Lead.deleteMany({ assignedTo: { $in: list.assignedTo } });
+    // Get all agents who had leads from this list
+    const leads = await Lead.find({ listId: list._id }).populate('assignedTo');
+    const affectedAgents = new Set(leads.map(lead => lead.assignedTo._id.toString()));
+
+    // Delete leads associated with this list
+    await Lead.deleteMany({ listId: list._id });
+
+    // Update agents' leads count
+    for (const agentId of affectedAgents) {
+      const agentLeads = await Lead.countDocuments({ assignedTo: agentId });
+      await Agent.findByIdAndUpdate(agentId, { $set: { leadsCount: agentLeads } });
+    }
 
     // Delete the list
     await List.findByIdAndDelete(req.params.id);
+
+    // Get updated agents data
+    const updatedAgents = await Agent.find({ _id: { $in: Array.from(affectedAgents) } });
 
     res.json({ 
       message: 'List and associated leads deleted successfully',
@@ -155,7 +169,8 @@ const deleteList = async (req, res) => {
         id: list._id,
         name: list.name,
         totalLeads: list.totalLeads
-      }
+      },
+      updatedAgents
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

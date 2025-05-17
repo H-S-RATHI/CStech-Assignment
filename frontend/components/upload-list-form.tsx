@@ -76,7 +76,7 @@ export function UploadListForm() {
       const formData = new FormData()
       formData.append('file', file)
       
-      const response = await fetch(`${API_BASE_URL}/api/lists`, {
+      const response = await fetch(`${API_BASE_URL}/api/lists/upload`, {
         method: 'POST',
         headers: {
           "Authorization": `Bearer ${token}`
@@ -129,6 +129,7 @@ export function UploadListForm() {
   return (
     <div className="space-y-4">
       <div className="grid w-full max-w-sm items-center gap-1.5">
+        <Label htmlFor="file-upload">Upload CSV, XLSX, or XLS file</Label>
         <div className="flex items-center gap-2">
           <Input
             id="file-upload"

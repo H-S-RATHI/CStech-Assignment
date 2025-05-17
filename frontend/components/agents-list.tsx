@@ -35,6 +35,17 @@ export const AgentsList = forwardRef<AgentsListRef>((props, ref) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Public method to refresh the agent list
+  const refresh = async () => {
+    await fetchAgents();
+  };
+
+  // Expose the refresh method via ref
+  useImperativeHandle(ref, () => ({
+    fetchAgents,
+    refresh
+  }));
+
   // Fetch agents from the backend
   const fetchAgents = async () => {
     try {

@@ -4,14 +4,7 @@ import { useState, useEffect } from "react"
 import { Download, Eye, MoreHorizontal, Trash } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
@@ -147,8 +140,17 @@ export function ListsTable() {
       const data = await response.json()
       console.log('Delete response data:', data);
       
-      // Refresh the lists to show the updated state
+      // Refresh both lists and agents
       await refreshLists()
+      
+      // If there are updated agents, update their leads count
+      if (data.updatedAgents) {
+        // Find the agents list component and refresh it
+        const agentsList = document.querySelector('AgentsList') as any;
+        if (agentsList && typeof agentsList.refresh === 'function') {
+          agentsList.refresh();
+        }
+      }
       
       // Show success toast with deleted list info
       toast({
