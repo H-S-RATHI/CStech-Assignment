@@ -93,6 +93,11 @@ export function UploadListForm() {
         title: "List uploaded successfully",
         description: `The list has been uploaded successfully. ${data.list.totalLeads} leads processed`,
       })
+
+      // Refresh the lists table using global function
+      if (typeof window !== 'undefined' && typeof window.refreshLists === 'function') {
+        window.refreshLists()
+      }
     } catch (error) {
       toast({
         title: "Upload failed",

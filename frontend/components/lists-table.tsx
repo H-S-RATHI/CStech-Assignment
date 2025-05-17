@@ -29,12 +29,30 @@ interface List {
 }
 
 
+declare global {
+  interface Window {
+    refreshLists: () => Promise<void>
+  }
+}
+
 export function ListsTable() {
   const [lists, setLists] = useState<List[]>([])
   const [selectedList, setSelectedList] = useState<List | null>(null)
   const [showDistribution, setShowDistribution] = useState(false)
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+
+  // Function to refresh lists
+  const refreshLists = async () => {
+    await fetchLists()
+  }
+
+  // Expose refresh function only on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.refreshLists = refreshLists
+    }
+  }, [refreshLists])
 
   // Fetch lists from backend
   const fetchLists = async () => {
@@ -128,8 +146,8 @@ export function ListsTable() {
       const data = await response.json()
       console.log('Delete response data:', data);
       
-      // Update the lists state
-      setLists(lists.filter((list) => list._id === id))
+      // Refresh the lists to show the updated state
+      await refreshLists()
       
       // Show success toast with deleted list info
       toast({
