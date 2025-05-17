@@ -128,7 +128,6 @@ export function UploadListForm() {
   return (
     <div className="space-y-4">
       <div className="grid w-full max-w-sm items-center gap-1.5">
-        <Label htmlFor="file-upload">Upload CSV, XLSX, or XLS file</Label>
         <div className="flex items-center gap-2">
           <Input
             id="file-upload"
@@ -136,7 +135,7 @@ export function UploadListForm() {
             accept=".csv,.xlsx,.xls"
             onChange={handleFileChange}
             disabled={isUploading}
-            className="flex-1"
+            className="flex-1 max-w-[200px] text-gray-400 dark:text-gray-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
           />
           <Button
             onClick={handleUpload}
