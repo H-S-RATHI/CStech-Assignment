@@ -129,11 +129,29 @@ const getListDistribution = async (req, res) => {
   }
 };
 
-// Delete a list
+// Delete a list and its associated leads
 const deleteList = async (req, res) => {
   try {
+    // First find the list to get its ID
+    const list = await List.findById(req.params.id);
+    if (!list) {
+      return res.status(404).json({ message: 'List not found' });
+    }
+
+    // Delete associated leads
+    await Lead.deleteMany({ assignedTo: { $in: list.assignedTo } });
+
+    // Delete the list
     await List.findByIdAndDelete(req.params.id);
-    res.json({ message: 'List deleted successfully' });
+
+    res.json({ 
+      message: 'List and associated leads deleted successfully',
+      deletedList: {
+        id: list._id,
+        name: list.name,
+        totalLeads: list.totalLeads
+      }
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

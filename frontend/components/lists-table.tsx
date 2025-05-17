@@ -20,6 +20,7 @@ import { ListDistributionDetails } from "@/components/list-distribution-details"
 
 // Define List type
 interface List {
+  _id: string;
   id: string;
   name: string;
   uploadDate: string;
@@ -63,7 +64,14 @@ export function ListsTable() {
         throw new Error(data.message || 'Failed to fetch lists')
       }
 
-      setLists(data)
+      // Convert _id to id for each list
+      const formattedLists = data.map((list: any) => ({
+        ...list,
+        id: list._id.toString(),
+        uploadDate: new Date(list.uploadDate).toLocaleDateString('en-IN')
+      }))
+
+      setLists(formattedLists)
     } catch (error) {
       toast({
         title: "Error",
@@ -77,7 +85,16 @@ export function ListsTable() {
 
   // Delete list
   const handleDeleteList = async (id: string) => {
+    console.log('Starting delete process for _id:', id);
+    console.log('_id type:', typeof id);
+    console.log('_id value:', id);
     try {
+      // Validate ID format
+      if (!id || typeof id !== 'string' || !id.trim()) {
+        console.log('ID validation failed');
+        throw new Error('Invalid list ID');
+      }
+
       const token = localStorage.getItem('token')
       
       if (!token) {
@@ -89,25 +106,38 @@ export function ListsTable() {
         return
       }
 
-      const response = await fetch(`http://localhost:5000/api/lists/${id}`, {
+      // Make the delete request
+      console.log('Making delete request with _id:', id);
+      const response = await fetch(`http://localhost:5000/api/lists/${encodeURIComponent(id)}`, {
         method: "DELETE",
         headers: { 
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
         },
       })
 
-      const data = await response.json()
+      console.log('Response status:', response.status);
       
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to delete list')
+        const errorData = await response.json()
+        console.log('Error data:', errorData);
+        throw new Error(errorData.message || 'Failed to delete list')
       }
 
-      setLists(lists.filter((list) => list.id !== id))
+      // Get the deleted list data from response
+      const data = await response.json()
+      console.log('Delete response data:', data);
+      
+      // Update the lists state
+      setLists(lists.filter((list) => list._id === id))
+      
+      // Show success toast with deleted list info
       toast({
         title: "List deleted",
-        description: "The list has been deleted successfully",
+        description: `Successfully deleted list: ${data.deletedList.name} (${data.deletedList.totalLeads} leads)`,
       })
     } catch (error) {
+      console.error('Delete error:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to delete list",
@@ -140,42 +170,58 @@ export function ListsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {lists.map((list) => (
-              <TableRow key={list.id}>
-                <TableCell className="font-medium">{list.name}</TableCell>
-                <TableCell>{list.uploadDate}</TableCell>
-                <TableCell>{list.totalLeads}</TableCell>
-                <TableCell>
-                  <Badge className="bg-gradient-to-r from-green-500 to-emerald-500">{list.status}</Badge>
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Open menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleViewDistribution(list)}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        View Distribution
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Download className="mr-2 h-4 w-4" />
-                        Download
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDeleteList(list.id)}>
-                        <Trash className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+             {lists.map((list) => {
+                console.log('Current list:', list);
+                
+                const handleDelete = (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  console.log('Attempting to delete list:', list);
+                  console.log('List _id type:', typeof list._id);
+                  console.log('List _id value:', list._id);
+                  const confirmDelete = window.confirm('Are you sure you want to delete this list?');
+                  if (confirmDelete) {
+                    console.log('Confirmed delete for list _id:', list._id);
+                    handleDeleteList(list._id);
+                  }
+                };
+
+                return (
+                  <TableRow key={list.id}>
+                    <TableCell className="font-medium">{list.name}</TableCell>
+                    <TableCell>{list.uploadDate}</TableCell>
+                    <TableCell>{list.totalLeads}</TableCell>
+                    <TableCell>
+                      <Badge className="bg-gradient-to-r from-green-500 to-emerald-500">{list.status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" key={list.id}>
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleViewDistribution(list)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Distribution
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Download className="mr-2 h-4 w-4" />
+                            Download
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleDelete}>
+                            <Trash className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
           </TableBody>
         </Table>
       </div>
