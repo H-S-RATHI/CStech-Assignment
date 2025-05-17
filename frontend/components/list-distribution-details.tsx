@@ -1,5 +1,11 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+"use client"
+
 import { useEffect, useState } from "react"
+import { User } from "lucide-react"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Badge } from "@/components/ui/badge"
 import { API_BASE_URL } from "@/lib/config"
 
 interface List {
@@ -21,49 +27,48 @@ interface Agent {
   }>
 }
 
-
 export async function getDistributionData(listId: string): Promise<Agent[]> {
   try {
-    console.log('Fetching distribution for list:', listId);
+    console.log("Fetching distribution for list:", listId)
     const response = await fetch(`${API_BASE_URL}/api/lists/${listId}/distribution`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-    
-    console.log('Response status:', response.status);
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
+
+    console.log("Response status:", response.status)
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Response error:', errorText);
-      throw new Error(`Failed to fetch distribution data: ${errorText}`);
+      const errorText = await response.text()
+      console.error("Response error:", errorText)
+      throw new Error(`Failed to fetch distribution data: ${errorText}`)
     }
-    
-    const data = await response.json();
-    console.log('Received data:', data);
-    
+
+    const data = await response.json()
+    console.log("Received data:", data)
+
     // Transform the data to match our Agent interface
-    const agents = data.distribution.map((agent: { agent: { id: string; name: string; email: string }; leads: any[] }) => ({
-      id: agent.agent.id,
-      name: agent.agent.name,
-      leadsCount: agent.leads.length,
-      leads: agent.leads.map((lead: { firstName: string; phone: string; notes: string }) => ({
-        firstName: lead.firstName,
-        phone: lead.phone,
-        notes: lead.notes
-      }))
-    }));
-    
-    console.log('Transformed agents:', agents);
-    return agents;
+    const agents = data.distribution.map(
+      (agent: { agent: { id: string; name: string; email: string }; leads: any[] }) => ({
+        id: agent.agent.id,
+        name: agent.agent.name,
+        leadsCount: agent.leads.length,
+        leads: agent.leads.map((lead: { firstName: string; phone: string; notes: string }) => ({
+          firstName: lead.firstName,
+          phone: lead.phone,
+          notes: lead.notes,
+        })),
+      }),
+    )
+
+    console.log("Transformed agents:", agents)
+    return agents
   } catch (err) {
-    console.error('Error fetching distribution data:', err);
-    return [];
+    console.error("Error fetching distribution data:", err)
+    return []
   }
 }
-
-import { ChevronDown, ChevronUp } from "lucide-react"
 
 export function ListDistributionDetails({ list }: { list: List }) {
   const [agents, setAgents] = useState<Agent[]>([])
@@ -78,9 +83,12 @@ export function ListDistributionDetails({ list }: { list: List }) {
         setError(null)
         const data = await getDistributionData(list.id)
         setAgents(data)
+        if (data.length > 0) {
+          setSelectedAgent(data[0].id) // Select the first agent by default
+        }
       } catch (err) {
-        setError('Failed to load distribution data')
-        console.error('Error:', err)
+        setError("Failed to load distribution data")
+        console.error("Error:", err)
       } finally {
         setLoading(false)
       }
@@ -91,108 +99,107 @@ export function ListDistributionDetails({ list }: { list: List }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-violet-500 border-t-transparent"></div>
+      <div className="flex items-center justify-center p-6">
+        <div className="animate-spin rounded-full h-8 w-8 border-3 border-violet-500 border-t-transparent"></div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
-        <div className="text-red-700 font-medium">Error</div>
-        <p className="text-red-600 text-sm mt-2">{error}</p>
-      </div>
+      <Card className="border-red-200 bg-red-50">
+        <CardContent className="p-4">
+          <div className="text-red-700 font-medium text-base">Error</div>
+          <p className="text-red-600 mt-1 text-sm">{error}</p>
+        </CardContent>
+      </Card>
     )
   }
 
   if (agents.length === 0) {
     return (
-      <div className="p-6 bg-slate-50 border border-slate-200 rounded-lg">
-        <div className="text-slate-700 font-medium">No Distribution</div>
-        <p className="text-slate-600 text-sm mt-2">No leads have been distributed yet</p>
-      </div>
+      <Card className="border-slate-200 bg-slate-50">
+        <CardContent className="p-4">
+          <div className="text-slate-700 font-medium text-base">No Distribution</div>
+          <p className="text-slate-600 mt-1 text-sm">No leads have been distributed yet</p>
+        </CardContent>
+      </Card>
     )
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Agents Distribution</h2>
-        <div className="space-y-2">
-          {agents.map((agent) => (
-            <div
-              key={agent.id}
-              className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors ${
-                selectedAgent === agent.id
-                  ? 'bg-violet-50 dark:bg-violet-900/20 border-l-4 border-violet-500'
-                  : 'hover:bg-gray-50 dark:hover:bg-slate-700/50'
-              }`}
-              onClick={() => setSelectedAgent(selectedAgent === agent.id ? null : agent.id)}
-            >
-              <div className="flex items-center space-x-3">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 flex items-center justify-center text-white font-semibold">
-                  {agent.name.charAt(0)}
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900 dark:text-white">{agent.name}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{agent.leadsCount} Leads</p>
-                </div>
-              </div>
-              {selectedAgent === agent.id ? (
-                <ChevronUp className="h-5 w-5 text-violet-500" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+  // Find the selected agent data
+  const selectedAgentData = agents.find(agent => agent.id === selectedAgent) || agents[0];
 
-      {selectedAgent && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {agents.find(a => a.id === selectedAgent)?.name}'s Leads
-            </h3>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {agents.find(a => a.id === selectedAgent)?.leadsCount} Leads
+  return (
+    <div className="space-y-4 w-4/5 mx-auto">
+      <Card className="shadow-sm">
+        <CardHeader className="pb-2 pt-3">
+          <CardTitle className="text-base font-medium flex items-center gap-2">
+            <span className="bg-violet-100 dark:bg-violet-900/30 p-1 rounded-md">
+              <User className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+            </span>
+            Agents Distribution
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {/* Excel-like tabs for agents */}
+          <div className="border-b border-gray-200 dark:border-gray-700 mb-2">
+            <div className="flex overflow-x-auto">
+              {agents.map((agent) => (
+                <div
+                  key={agent.id}
+                  className={`py-2 px-4 text-xs cursor-pointer whitespace-nowrap flex items-center gap-1
+                    ${selectedAgent === agent.id
+                      ? "border-b-2 border-violet-500 text-violet-700 dark:text-violet-400 font-medium"
+                      : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300"
+                    }`}
+                  onClick={() => setSelectedAgent(agent.id)}
+                >
+                  <div className="h-5 w-5 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 flex items-center justify-center text-white text-xs font-medium">
+                    {agent.name.charAt(0)}
+                  </div>
+                  <span>{agent.name}</span>
+                  <Badge variant={agent.leadsCount > 0 ? "default" : "outline"} className="ml-1 text-xs py-0 h-4">
+                    {agent.leadsCount}
+                  </Badge>
+                </div>
+              ))}
             </div>
           </div>
-          
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="overflow-y-auto max-h-[400px]">
-              <Table className="w-full">
-                <TableHeader>
+
+          {/* Data table for the selected agent */}
+          <div className="border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
+            <ScrollArea className="h-[400px] w-full">
+              <Table>
+                <TableHeader className="sticky top-0 z-10">
                   <TableRow>
-                    <TableHead className="bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-gray-300 py-3">
-                      First Name
-                    </TableHead>
-                    <TableHead className="bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-gray-300 py-3">
-                      Phone
-                    </TableHead>
-                    <TableHead className="bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-gray-300 py-3">
-                      Notes
-                    </TableHead>
+                    <TableHead className="bg-gray-50 dark:bg-slate-800 font-medium text-xs w-1/4">First Name</TableHead>
+                    <TableHead className="bg-gray-50 dark:bg-slate-800 font-medium text-xs w-1/4">Phone</TableHead>
+                    <TableHead className="bg-gray-50 dark:bg-slate-800 font-medium text-xs w-2/4">Notes</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {agents.find(a => a.id === selectedAgent)?.leads.map((lead, leadIndex) => (
-                    <TableRow
-                      key={leadIndex}
-                      className="hover:bg-gray-50 dark:hover:bg-slate-700/50"
-                    >
-                      <TableCell className="py-4">{lead.firstName}</TableCell>
-                      <TableCell className="py-4">{lead.phone}</TableCell>
-                      <TableCell className="py-4">{lead.notes}</TableCell>
+                  {selectedAgentData.leads.length > 0 ? (
+                    selectedAgentData.leads.map((lead, index) => (
+                      <TableRow key={index} className="text-xs">
+                        <TableCell className="py-2">{lead.firstName}</TableCell>
+                        <TableCell className="py-2">{lead.phone}</TableCell>
+                        <TableCell className="py-2">{lead.notes}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center py-8 text-gray-500 text-xs">
+                        No leads assigned to this agent
+                      </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
-            </div>
+            </ScrollArea>
           </div>
-        </div>
-      )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

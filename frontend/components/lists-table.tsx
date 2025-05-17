@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import { ListDistributionDetails } from "@/components/list-distribution-details"
 import { API_BASE_URL } from "@/lib/config"
 
@@ -244,13 +245,10 @@ export function ListsTable() {
       </div>
 
       <Dialog open={showDistribution} onOpenChange={setShowDistribution}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[1000px]">
+          <VisuallyHidden>
             <DialogTitle>List Distribution Details</DialogTitle>
-            <DialogDescription>
-              {selectedList?.name} - {selectedList?.totalLeads} leads distributed to 5 agents
-            </DialogDescription>
-          </DialogHeader>
+          </VisuallyHidden>
           {selectedList && <ListDistributionDetails list={selectedList} />}
         </DialogContent>
       </Dialog>
