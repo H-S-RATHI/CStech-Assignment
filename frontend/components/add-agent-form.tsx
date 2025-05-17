@@ -19,6 +19,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
+import { API_BASE_URL } from "@/lib/config"
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -65,7 +66,7 @@ export function AddAgentForm({ onAgentAdded }: AddAgentFormProps = {}) {
       }
       
       console.log('Making API call to add agent');
-      const response = await fetch("http://localhost:5000/api/agents", {
+      const response = await fetch(`${API_BASE_URL}/api/agents`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

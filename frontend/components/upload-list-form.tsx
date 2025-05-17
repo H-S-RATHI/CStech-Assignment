@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Progress } from "@/components/ui/progress"
+import { API_BASE_URL } from "@/lib/config"
 
 export function UploadListForm() {
   const [file, setFile] = useState<File | null>(null)
@@ -75,7 +76,7 @@ export function UploadListForm() {
       const formData = new FormData()
       formData.append('file', file)
       
-      const response = await fetch('http://localhost:5000/api/lists/upload', {
+      const response = await fetch(`${API_BASE_URL}/api/lists`, {
         method: 'POST',
         headers: {
           "Authorization": `Bearer ${token}`

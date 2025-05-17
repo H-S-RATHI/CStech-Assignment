@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useToast } from "@/hooks/use-toast"
+import { API_BASE_URL } from "@/lib/config"
 
 // Define agent type
 interface Agent {
@@ -53,7 +54,7 @@ export const AgentsList = forwardRef<AgentsListRef>((props, ref) => {
         return;
       }
       
-      const response = await fetch("http://localhost:5000/api/agents", {
+      const response = await fetch(`${API_BASE_URL}/api/agents`, {
         method: "GET",
         headers: { 
           "Authorization": `Bearer ${token}`
@@ -106,7 +107,7 @@ export const AgentsList = forwardRef<AgentsListRef>((props, ref) => {
         return;
       }
       
-      const response = await fetch(`http://localhost:5000/api/agents/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/agents/${id}`, {
         method: "DELETE",
         headers: { 
           "Authorization": `Bearer ${token}`

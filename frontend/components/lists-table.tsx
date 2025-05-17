@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ListDistributionDetails } from "@/components/list-distribution-details"
+import { API_BASE_URL } from "@/lib/config"
 
 // Define List type
 interface List {
@@ -69,7 +70,7 @@ export function ListsTable() {
         return
       }
 
-      const response = await fetch("http://localhost:5000/api/lists", {
+      const response = await fetch(`${API_BASE_URL}/api/lists`, {
         method: "GET",
         headers: { 
           "Authorization": `Bearer ${token}`
@@ -126,7 +127,7 @@ export function ListsTable() {
 
       // Make the delete request
       console.log('Making delete request with _id:', id);
-      const response = await fetch(`http://localhost:5000/api/lists/${encodeURIComponent(id)}`, {
+      const response = await fetch(`${API_BASE_URL}/api/lists/${encodeURIComponent(id)}`, {
         method: "DELETE",
         headers: { 
           "Authorization": `Bearer ${token}`,

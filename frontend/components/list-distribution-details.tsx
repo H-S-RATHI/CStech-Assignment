@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useEffect, useState } from "react"
+import { API_BASE_URL } from "@/lib/config"
 
 interface List {
   id: string
@@ -20,42 +21,11 @@ interface Agent {
   }>
 }
 
-// Mock data for distribution
-const generateMockDistribution = (list: List): Agent[] => {
-  const agents: Agent[] = [
-    { id: "1", name: "John Smith", leadsCount: 0, leads: [] },
-    { id: "2", name: "Sarah Johnson", leadsCount: 0, leads: [] },
-    { id: "3", name: "Michael Brown", leadsCount: 0, leads: [] },
-    { id: "4", name: "Emily Davis", leadsCount: 0, leads: [] },
-    { id: "5", name: "David Wilson", leadsCount: 0, leads: [] },
-  ]
-
-  // Calculate leads per agent
-  const leadsPerAgent = Math.floor(list.totalLeads / agents.length)
-  const remainder = list.totalLeads % agents.length
-
-  // Distribute leads
-  agents.forEach((agent, index) => {
-    const extraLead = index < remainder ? 1 : 0
-    agent.leadsCount = leadsPerAgent + extraLead
-
-    // Generate mock leads
-    for (let i = 0; i < agent.leadsCount; i++) {
-      agent.leads.push({
-        firstName: `Lead ${i + 1}`,
-        phone: `+1 (555) ${100 + i}-${1000 + i}`,
-        notes: `Note for lead ${i + 1}`,
-      })
-    }
-  })
-
-  return agents
-}
 
 export async function getDistributionData(listId: string): Promise<Agent[]> {
   try {
     console.log('Fetching distribution for list:', listId);
-    const response = await fetch(`http://localhost:5000/api/lists/${listId}/distribution`, {
+    const response = await fetch(`${API_BASE_URL}/api/lists/${listId}/distribution`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
